@@ -164,6 +164,7 @@ The desktop GUIs are built with Python’s built-in [tkinter](https://docs.pytho
 ```
 yt-downloader/
 ├── core/
+│   ├── __init__.py                   # Makes core a Python package
 │   └── downloader.py                 # All download logic lives here
 ├── mac/
 │   ├── yt_downloader_gui.py          # macOS GUI (UI only)
