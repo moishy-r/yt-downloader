@@ -12,6 +12,8 @@
 :: and copy ffmpeg.exe + ffprobe.exe into packaging\bin\
 
 setlocal enabledelayedexpansion
+:: In CI (GitHub Actions sets CI=true) never wait for a keypress or open Explorer
+if defined CI (set "PAUSE=rem") else (set "PAUSE=pause")
 title YT Downloader - Windows build
 cd /d "%~dp0.."
 set "ROOT=%cd%"
@@ -27,7 +29,7 @@ where python >nul 2>&1
 if errorlevel 1 (
     echo  [ERROR] Python not found. Install it from https://python.org
     echo          and tick "Add Python to PATH" during setup.
-    pause & exit /b 1
+    %PAUSE% & exit /b 1
 )
 for /f "tokens=*" %%v in ('python --version 2^>^&1') do echo  [OK] %%v
 
@@ -37,7 +39,7 @@ echo  Installing dependencies...
 if not exist "%VENV%\Scripts\python.exe" python -m venv "%VENV%"
 "%VENV%\Scripts\python.exe" -m pip install --quiet --upgrade pip
 "%VENV%\Scripts\python.exe" -m pip install --quiet ".[build]"
-if errorlevel 1 ( echo  [ERROR] Installing dependencies failed. & pause & exit /b 1 )
+if errorlevel 1 ( echo  [ERROR] Installing dependencies failed. & %PAUSE% & exit /b 1 )
 echo  [OK] Dependencies installed
 
 :: 2. Tools to bundle
@@ -80,11 +82,12 @@ if exist "dist\%APP_NAME%.exe" del /q "dist\%APP_NAME%.exe"
   --specpath build ^
   !EXTRA! ^
   "%ROOT%\packaging\app_entry.py"
-if errorlevel 1 ( echo. & echo  [ERROR] Build failed, see the output above. & pause & exit /b 1 )
+if errorlevel 1 ( echo. & echo  [ERROR] Build failed, see the output above. & %PAUSE% & exit /b 1 )
 
 echo.
 echo  Done!  %ROOT%\dist\%APP_NAME%.exe
 echo  Copy it anywhere; it needs no installer and no Python.
 echo  (Uses the Microsoft Edge WebView2 runtime, which Windows 10/11 already have.)
-explorer dist
-pause
+if not defined CI explorer dist
+%PAUSE%
+exit /b 0

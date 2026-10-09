@@ -81,6 +81,14 @@ ytdl-web                 # or: python -m ytdl.web   (options: --port 8800, --no-
 
 The server only listens on `127.0.0.1` and rejects requests from other sites or hosts, so other devices and web pages can't use it. Files go straight into the folder you choose with **Choose…**, which opens your system's folder picker. (This works because the server runs on your own computer.) When it's done, you can also save each file through the browser.
 
+## Releases
+
+Ready-made apps are on the [Releases page](../../releases): macOS (Apple Silicon and Intel, macOS 15+) and Windows 10/11. They're built and self-tested by GitHub Actions ([`.github/workflows/build.yml`](.github/workflows/build.yml)). To publish a new version, bump `__version__` in `ytdl/__init__.py`, then:
+
+```bash
+git tag v2.0.1 && git push origin v2.0.1
+```
+
 ## Building the desktop app
 
 Builds a standalone app that needs no Python. ffmpeg is bundled from your machine.
