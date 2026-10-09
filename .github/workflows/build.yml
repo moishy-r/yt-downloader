@@ -1,0 +1,125 @@
+# Builds the macOS app and Windows exe on every PR and push to main (so broken
+# builds are caught early), and publishes them as a GitHub Release when a
+# version tag is pushed:
+#
+#   git tag v2.0.0 && git push origin v2.0.0
+#
+# Each packaged app runs `--self-test` (bundled ffmpeg, yt-dlp, UI, local
+# server, GUI backend) before anything is uploaded.
+
+name: Build apps
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: pytest -q
+
+  macos:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            arch: AppleSilicon
+          - runner: macos-15-intel
+            arch: Intel
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install ffmpeg
+        run: brew install ffmpeg
+      - name: Build
+        run: ./packaging/build_mac.sh
+        env:
+          NO_OPEN: "1"
+      - name: Self-test the packaged app
+        run: |
+          # Hide Homebrew so the app must use its own bundled ffmpeg
+          export PATH="/usr/bin:/bin:/usr/sbin:/sbin"
+          "dist/YT Downloader.app/Contents/MacOS/YT Downloader" --self-test
+      - name: Show minimum macOS version
+        run: |
+          vtool -show-build "dist/YT Downloader.app/Contents/Frameworks/ffmpeg" | grep -E "minos|platform" || true
+      - name: Rename
+        run: mv "dist/YT Downloader-macOS.zip" "dist/YT-Downloader-macOS-${{ matrix.arch }}.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}
+          path: dist/YT-Downloader-macOS-${{ matrix.arch }}.zip
+          if-no-files-found: error
+
+  windows:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Get static ffmpeg (gyan.dev essentials build)
+        shell: pwsh
+        run: |
+          Invoke-WebRequest https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip -OutFile ffmpeg.zip
+          Expand-Archive ffmpeg.zip -DestinationPath ffmpeg-tmp
+          New-Item -ItemType Directory -Force packaging\bin | Out-Null
+          Get-ChildItem ffmpeg-tmp -Recurse -Include ffmpeg.exe,ffprobe.exe | Copy-Item -Destination packaging\bin
+          Get-ChildItem packaging\bin
+      - name: Build
+        shell: cmd
+        run: packaging\build_windows.bat
+      - name: Self-test the packaged app
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath "dist\YT Downloader.exe" -ArgumentList '--self-test', "$PWD\selftest.txt" -Wait -PassThru
+          Get-Content selftest.txt
+          if ($p.ExitCode -ne 0) { exit 1 }
+      - name: Rename
+        shell: pwsh
+        run: Move-Item "dist\YT Downloader.exe" "dist\YT-Downloader-Windows.exe"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/YT-Downloader-Windows.exe
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [macos, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la dist
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "YT Downloader $GITHUB_REF_NAME" \
+            --notes-file packaging/release_notes.md \
+            --generate-notes
