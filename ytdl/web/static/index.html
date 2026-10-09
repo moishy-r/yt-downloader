@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>YT Downloader</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23e5262b'/%3E%3Cpath d='M12 9l11 7-11 7z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <!-- First-run legal notice: must be acknowledged before using the app -->
+  <div id="legal-modal" class="modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="legal-title">
+      <div class="modal-icon">⚠</div>
+      <h2 id="legal-title">Only download what you have permission to download</h2>
+      <p id="legal-text"></p>
+      <label class="check-line">
+        <input type="checkbox" id="legal-check">
+        <span>I understand and will only download content I have the rights to.</span>
+      </label>
+      <button id="legal-accept" class="btn primary" disabled>Continue</button>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <header class="top">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>YT Downloader</h1>
+        <p class="sub">Save YouTube videos and playlists as MP3 or MP4.</p>
+      </div>
+    </header>
+
+    <div id="ffmpeg-warning" class="banner warn" hidden>
+      <strong>ffmpeg isn't installed.</strong> MP3 conversion and HD video need it.
+      macOS: <code>brew install ffmpeg</code> · Windows: <code>winget install Gyan.FFmpeg</code>
+    </div>
+
+    <!-- 1. Link -->
+    <section class="card">
+      <label class="step" for="url"><span class="num">1</span> Paste a YouTube link</label>
+      <form id="fetch-form" class="row">
+        <input id="url" type="text" inputmode="url" autocomplete="off" spellcheck="false"
+               placeholder="https://www.youtube.com/watch?v=…  or a playlist link">
+        <button id="fetch-btn" class="btn primary" type="submit">Find videos</button>
+      </form>
+      <p id="fetch-error" class="error" hidden></p>
+    </section>
+
+    <!-- 2. Videos -->
+    <section id="videos-card" class="card" hidden>
+      <div class="step"><span class="num">2</span> <span id="videos-heading">Choose videos</span></div>
+      <p id="focus-note" class="hint" hidden></p>
+      <div id="list-tools" class="list-tools">
+        <input id="filter" type="search" placeholder="Filter by title…">
+        <button class="link" id="sel-all" type="button">Select all</button>
+        <button class="link" id="sel-none" type="button">None</button>
+        <span id="sel-count" class="muted"></span>
+      </div>
+      <ul id="video-list" class="video-list"></ul>
+    </section>
+
+    <!-- 3. Format & quality -->
+    <section id="options-card" class="card" hidden>
+      <div class="step"><span class="num">3</span> Format and quality</div>
+      <div class="opt-grid">
+        <div>
+          <div class="opt-label">Format</div>
+          <div id="fmt-group" class="seg" role="radiogroup"></div>
+        </div>
+        <div>
+          <div class="opt-label">Quality</div>
+          <div id="quality-group" class="seg" role="radiogroup"></div>
+        </div>
+      </div>
+      <div class="opt-label">Save to</div>
+      <div class="folder">
+        <div class="folder-icon" aria-hidden="true"></div>
+        <div class="folder-text">
+          <div id="out-name" class="folder-name"></div>
+          <div id="out-path" class="folder-path"></div>
+        </div>
+        <button id="browse-btn" class="btn" type="button">Choose…</button>
+      </div>
+      <p class="hint" id="out-hint"></p>
+      <p id="pick-error" class="error" hidden></p>
+    </section>
+
+    <!-- 4. Download -->
+    <section id="go-card" class="card" hidden>
+      <button id="download-btn" class="btn primary big" type="button">Download</button>
+
+      <div id="progress" hidden>
+        <div class="progress-head">
+          <span id="progress-title">Starting…</span>
+          <span id="progress-stats" class="muted"></span>
+        </div>
+        <div class="bar"><div id="bar-fill"></div></div>
+        <div class="progress-foot">
+          <span id="progress-count" class="muted"></span>
+          <button id="cancel-btn" class="btn small" type="button">Stop</button>
+        </div>
+      </div>
+
+      <div id="done" hidden>
+        <p id="done-msg" class="done-msg"></p>
+        <p id="done-path" class="hint"></p>
+        <ul id="fail-list" class="fail-list"></ul>
+        <div class="row wrap-row">
+          <button id="open-folder" class="btn primary" type="button">Open folder</button>
+          <button id="again" class="btn" type="button">Download something else</button>
+        </div>
+        <details id="file-links" hidden>
+          <summary>Save files through the browser instead</summary>
+          <ul id="file-list" class="file-list"></ul>
+        </details>
+      </div>
+    </section>
+
+    <footer class="legal-foot">
+      <span>⚠ <span id="legal-short"></span></span>
+      <span class="muted" id="version"></span>
+    </footer>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
