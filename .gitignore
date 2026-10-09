@@ -1,15 +1,17 @@
-# PyInstaller output
+# Build output
 build/
 dist/
-*.spec
+*.egg-info/
 
 # Python
 __pycache__/
 *.pyc
-*.pyo
+.venv/
+.pytest_cache/
 
-# macOS
+# Bundled binaries dropped next to the build scripts
+packaging/bin/
+
+# OS
 .DS_Store
-
-# Windows
 Thumbs.db
