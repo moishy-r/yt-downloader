@@ -13,7 +13,8 @@
 
 setlocal enabledelayedexpansion
 :: In CI (GitHub Actions sets CI=true) never wait for a keypress or open Explorer
-if defined CI (set "PAUSE=rem") else (set "PAUSE=pause")
+:: (a no-op command, not "rem", which would comment out the rest of the line)
+if defined CI (set "PAUSE=ver>nul") else (set "PAUSE=pause")
 title YT Downloader - Windows build
 cd /d "%~dp0.."
 set "ROOT=%cd%"
