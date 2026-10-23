@@ -14,6 +14,7 @@ from pathlib import Path
 from werkzeug.serving import make_server
 
 from ytdl import APP_NAME
+from ytdl.core import app_data_dir
 from ytdl.web.server import create_app
 
 
@@ -32,18 +33,6 @@ class NativeApi:
         # pywebview's dialog is attached to the app window (nicer than a free-floating one)
         result = self.window.create_file_dialog(kind, directory=start_dir)
         return result[0] if result else None
-
-
-def _storage_dir() -> str:
-    if sys.platform == "darwin":
-        base = Path.home() / "Library" / "Application Support"
-    elif sys.platform == "win32":
-        base = Path.home() / "AppData" / "Local"
-    else:
-        base = Path.home() / ".local" / "share"
-    path = base / APP_NAME
-    path.mkdir(parents=True, exist_ok=True)
-    return str(path)
 
 
 def self_test(report: str | None = None) -> int:
@@ -157,7 +146,7 @@ def main():
         background_color="#111111", text_select=True,
     )
     try:
-        webview.start(private_mode=False, storage_path=_storage_dir())
+        webview.start(private_mode=False, storage_path=str(app_data_dir()))
     finally:
         server.shutdown()
 

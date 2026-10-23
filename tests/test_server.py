@@ -6,8 +6,9 @@ from ytdl.web.server import create_app
 
 
 @pytest.fixture
-def client():
+def client(tmp_path):
     app = create_app("web")
+    app.config["DATA_DIR"] = tmp_path
     return app.test_client()
 
 
@@ -15,6 +16,13 @@ def test_config_includes_legal_notice(client):
     cfg = client.get("/api/config", base_url="http://127.0.0.1:8765").get_json()
     assert "permission" in cfg["legal"]["text"]
     assert cfg["qualities"]["mp3"][0][0] == "320"
+
+
+def test_legal_ack_is_remembered(client):
+    base = "http://127.0.0.1:8765"
+    assert client.get("/api/config", base_url=base).get_json()["legal"]["acknowledged"] is False
+    assert client.post("/api/legal/ack", json={}, base_url=base).status_code == 200
+    assert client.get("/api/config", base_url=base).get_json()["legal"]["acknowledged"] is True
 
 
 def test_index_served(client):
