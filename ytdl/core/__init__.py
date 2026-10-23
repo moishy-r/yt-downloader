@@ -29,8 +29,10 @@ if sys.platform == "darwin":
 from .fetch import Entry, FetchError, FetchResult, fetch, format_duration, normalize_url  # noqa: E402
 from .formats import DEFAULT_QUALITY, FORMATS, QUALITIES, validate  # noqa: E402
 from .job import DownloadJob, safe_folder_name  # noqa: E402
-from .legal import LEGAL_NOTICE, LEGAL_SHORT, LEGAL_TITLE  # noqa: E402
-from .paths import default_output_dir, resolve_path, shorthands  # noqa: E402
+from .legal import (  # noqa: E402
+    LEGAL_NOTICE, LEGAL_SHORT, LEGAL_TITLE, acknowledge_legal, legal_acknowledged,
+)
+from .paths import app_data_dir, default_output_dir, resolve_path, shorthands  # noqa: E402
 from .selection import SelectionError, parse_selection  # noqa: E402
 
 
@@ -47,7 +49,7 @@ def check_ffmpeg() -> bool:
 __all__ = [
     "Entry", "FetchError", "FetchResult", "fetch", "format_duration", "normalize_url",
     "DEFAULT_QUALITY", "FORMATS", "QUALITIES", "validate", "DownloadJob", "safe_folder_name",
-    "LEGAL_NOTICE", "LEGAL_SHORT", "LEGAL_TITLE",
-    "default_output_dir", "resolve_path", "shorthands",
+    "LEGAL_NOTICE", "LEGAL_SHORT", "LEGAL_TITLE", "acknowledge_legal", "legal_acknowledged",
+    "app_data_dir", "default_output_dir", "resolve_path", "shorthands",
     "SelectionError", "parse_selection", "check_ffmpeg", "check_js_runtime",
 ]

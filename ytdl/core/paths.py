@@ -43,6 +43,20 @@ def shorthands() -> dict[str, str]:
     return {k: str(v) for k, v in folders.items()}
 
 
+def app_data_dir() -> Path:
+    """Per-user folder for the app's own state (settings, webview storage)."""
+    from ytdl import APP_NAME
+    if sys.platform == "darwin":
+        base = Path.home() / "Library" / "Application Support"
+    elif sys.platform == "win32":
+        base = Path.home() / "AppData" / "Local"
+    else:
+        base = Path.home() / ".local" / "share"
+    path = base / APP_NAME
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
 def default_output_dir() -> str:
     return str(Path.home() / "Downloads" / "YT Downloads")
 

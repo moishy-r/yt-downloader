@@ -25,8 +25,8 @@ from werkzeug.serving import make_server
 from ytdl import APP_NAME, __version__
 from ytdl.core import (
     DEFAULT_QUALITY, FORMATS, LEGAL_NOTICE, LEGAL_SHORT, LEGAL_TITLE, QUALITIES,
-    DownloadJob, Entry, FetchError, check_ffmpeg, default_output_dir, fetch,
-    normalize_url, resolve_path, validate,
+    DownloadJob, Entry, FetchError, acknowledge_legal, check_ffmpeg, default_output_dir, fetch,
+    legal_acknowledged, normalize_url, resolve_path, validate,
 )
 from ytdl.core.system import PickerUnavailable, open_in_file_manager, pick_folder
 
@@ -111,8 +111,14 @@ def create_app(mode: str = "web") -> Flask:
             "default_quality": DEFAULT_QUALITY,
             "default_out_dir": default_output_dir(),
             "ffmpeg": check_ffmpeg(),
-            "legal": {"title": LEGAL_TITLE, "text": LEGAL_NOTICE, "short": LEGAL_SHORT},
+            "legal": {"title": LEGAL_TITLE, "text": LEGAL_NOTICE, "short": LEGAL_SHORT,
+                      "acknowledged": legal_acknowledged(app.config.get("DATA_DIR"))},
         })
+
+    @app.post("/api/legal/ack")
+    def api_legal_ack():
+        acknowledge_legal(app.config.get("DATA_DIR"))
+        return jsonify({"ok": True})
 
     @app.post("/api/fetch")
     def api_fetch():

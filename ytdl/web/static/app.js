@@ -41,15 +41,23 @@ function plural(n, word) { return `${n} ${word}${n === 1 ? "" : "s"}`; }
 function isDesktop() { return config && config.mode === "desktop"; }
 
 // ── legal notice ─────────────────────────────────────────────────────────────
+// Shown until ticked once. The server remembers it on disk (the desktop app's
+// port changes every launch, so localStorage alone would forget).
+function legalAcked() {
+  return config.legal.acknowledged || store.get("legal-ack-v1") === "yes";
+}
+
 function setupLegal() {
   $("legal-text").textContent = config.legal.text;
   $("legal-title").textContent = config.legal.title;
   $("legal-short").textContent = config.legal.short;
-  if (store.get("legal-ack-v1") === "yes") return;
+  if (legalAcked()) return;
   $("legal-modal").hidden = false;
   $("legal-check").addEventListener("change", (e) => { $("legal-accept").disabled = !e.target.checked; });
   $("legal-accept").addEventListener("click", () => {
     store.set("legal-ack-v1", "yes");
+    config.legal.acknowledged = true;
+    api("/api/legal/ack", {}).catch(() => { /* still remembered in this browser */ });
     $("legal-modal").hidden = true;
     $("url").focus();
   });
@@ -424,7 +432,7 @@ async function init() {
   $("cancel-btn").addEventListener("click", cancel);
   $("open-folder").addEventListener("click", () => api(`/api/jobs/${jobId}/open-folder`, {}));
   $("again").addEventListener("click", startOver);
-  if (store.get("legal-ack-v1") === "yes") $("url").focus();
+  if (legalAcked()) $("url").focus();
 }
 
 init().catch((err) => {
